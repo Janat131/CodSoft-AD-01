@@ -1,112 +1,202 @@
-import React, {useState} from 'react';
-import {  KeyboardAvoidingView,TextInput, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Task from './components/Task';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { Card, Button, FAB, Provider } from 'react-native-paper';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import tinycolor from 'tinycolor2';
 
-export default function App() {
-  const[task, setTask]= useState();
-  const [taskItems, setTaskItems] = useState([]);
+function TodoApp() {
+  const [todos, setTodos] = useState([]);
+  const [newTodo, setNewTodo] = useState('');
 
-  const handleAddTask = () => {
-    setTaskItems([...taskItems, task])
-    setTask(null);
-  }
-  const completeTask =(index) => {
-    let itemsCopy = [...taskItems];
-    itemsCopy.splice(index, 1);
-    setTaskItems(itemsCopy);
-
-  }
-  return (
-    <View style={styles.container}>
-    
-    <View styles={styles.taskWrapper}>
-     <Text style={styles.sectionTitle}>Today's tasks</Text>
-
-    <View style ={styles.items}>
-
-    {
-      taskItems.map((item) => {
-        return
+  const addTodo = () => {
+    if (newTodo) {
+      setTodos([
+        ...todos,
         {
-          <TouchableOpacity key={index}  onPress={() => completeTask(index)}>
-            <Task text={item} />
-          </TouchableOpacity>
-        } 
-      })
+          id: Date.now(),
+          text: newTodo,
+          completed: false,
+          color: generateRandomColor(),
+          editable: false,
+        },
+      ]);
+      setNewTodo('');
     }
-     <Task text={'Task 1'} />
-     <Task  text={'Task 2'}/>
-     </View>
-    
-    </View>
+  };
 
-    <KeyboardAvoidingView
-    behavior={Platform.OS === "ios" ? "padding" : "height"}
-    style={styles.writeTaskWrapper}
-    >
-      <TextInput style= {styles.input} placeholder={'Write a task'} value={task} onChangeText={text => setTask(text)}/>
-      <TouchableOpacity onPress={() => handleAddTask()}>
-        <View style={styles.addWrapper}>
-          <Text style={styles.addText}>+</Text>
-        </View>
-      </TouchableOpacity>
+  const startEditing = (id) => {
+    const updatedTodos = todos.map((todo) => {
+      if (todo.id === id) {
+        return { ...todo, editable: true };
+      }
+      return todo;
+    });
+    setTodos(updatedTodos);
+  };
 
-    </KeyboardAvoidingView>
+  const saveEdit = (id, newText) => {
+    const updatedTodos = todos.map((todo) => {
+      if (todo.id === id) {
+        return { ...todo, text: newText, editable: false };
+      }
+      return todo;
+    });
+    setTodos(updatedTodos);
+  };
 
+  const cancelEdit = (id) => {
+    const updatedTodos = todos.map((todo) => {
+      if (todo.id === id) {
+        return { ...todo, editable: false };
+      }
+      return todo;
+    });
+    setTodos(updatedTodos);
+  };
 
-    
-    </View>
+  const deleteTodo = (id) => {
+    const updatedTodos = todos.filter((todo) => todo.id !== id);
+    setTodos(updatedTodos);
+  };
+
+  const markAsComplete = (id) => {
+    const updatedTodos = todos.map((todo) => {
+      if (todo.id === id) {
+        return { ...todo, completed: true };
+      }
+      return todo;
+    });
+    setTodos(updatedTodos);
+  };
+
+  const undoComplete = (id) => {
+    const updatedTodos = todos.map((todo) => {
+      if (todo.id === id) {
+        return { ...todo, completed: false };
+      }
+      return todo;
+    });
+    setTodos(updatedTodos);
+  };
+
+  const generateRandomColor = () => {
+    const randomColor = tinycolor.random();
+    return randomColor.toRgbString();
+  };
+
+  return (
+    <Provider>
+      <View style={styles.container}>
+        <TextInput
+          style={styles.input}
+          placeholder="Add a new todo..."
+          value={newTodo}
+          onChangeText={(text) => setNewTodo(text)}
+        />
+        <Button mode="contained" onPress={addTodo}>
+          Add
+        </Button>
+
+        {todos.map((todo) => (
+          <TouchableOpacity key={todo.id}>
+            <Card
+              style={{
+                backgroundColor: todo.color,
+                marginBottom: 16,
+                padding: 16,
+                flexDirection: 'column',
+              }}
+            >
+              {todo.editable ? (
+                <View>
+                  <TextInput
+                    style={styles.editableText}
+                    value={todo.text}
+                    onChangeText={(text) => {
+                      const updatedTodos = todos.map((item) =>
+                        item.id === todo.id ? { ...item, text } : item
+                      );
+                      setTodos(updatedTodos);
+                    }}
+                  />
+                  <View style={styles.iconContainer}>
+                    <Icon
+                      name="done"
+                      size={24}
+                      color="rgba(0, 128, 0, 0.7)"
+                      onPress={() => saveEdit(todo.id, todo.text)}
+                    />
+                    <Icon
+                      name="cancel"
+                      size={24}
+                      color="rgba(255, 0, 0, 0.7)"
+                      onPress={() => cancelEdit(todo.id)}
+                    />
+                  </View>
+                </View>
+              ) : (
+                <Text style={styles.todoText}>
+                  {todo.completed ? `${todo.text} (Completed)` : todo.text}
+                </Text>
+              )}
+              <View style={styles.iconContainer}>
+                <Icon
+                  name="edit"
+                  size={24}
+                  color="rgba(0, 0, 0, 0.3)"
+                  onPress={() => startEditing(todo.id)}
+                />
+                <Icon
+                  name="delete"
+                  size={24}
+                  color="rgba(255, 0, 0, 0.7)"
+                  onPress={() => deleteTodo(todo.id)}
+                />
+                {!todo.completed ? (
+                  <Icon
+                    name="done"
+                    size={24}
+                    color="rgba(0, 128, 0, 0.7)"
+                    onPress={() => markAsComplete(todo.id)}
+                  />
+                ) : (
+                  <Icon
+                    name="undo"
+                    size={24}
+                    color="rgba(255, 0, 0, 0.7)"
+                    onPress={() => undoComplete(todo.id)}
+                  />
+                )}
+              </View>
+            </Card>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </Provider>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    
-  },
-  taskWrapper: {
-    paddingTop:80,
-    paddingHorizontal: 20,
-    
-  },
- 
-  sectionTitle:{
-    fontSize: 24,
-    fontWeight: 'bold'
-  },
-  items: {
-    marginTop:30,
-  },
-  writeTaskWrapper: {
-    position:'absolute',
-    bottom:60,
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'Center',
+    padding: 16,
   },
   input: {
-    paddingVertical:15,
-    paddingHorizontal:15,
-    backgroundColor: '#fff',
-    borderRadius:60,
-    borderColor:'#C0C0C0',
-    borderWidth:1,
-    width: 250,
-
-
+    fontSize: 18,
+    marginBottom: 10,
   },
-  addWrapper: {
-    width:60,
-    height:60,
-    backgroundColor:'#fff',
-    borderRadius:60,
-    justifyContent:'center',
-    alignItems: 'center',
-    borderColor:'#C0C0C0',
-    borderWidth:1,
-
+  editableText: {
+    fontSize: 20,
+    marginBottom: 10,
   },
-  addText: {},
+  todoText: {
+    fontSize: 24,
+    marginBottom: 10,
+  },
+  iconContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
 });
+
+export default App;
