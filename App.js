@@ -94,7 +94,7 @@ function App() {
           value={newTodo}
           onChangeText={(text) => setNewTodo(text)}
         />
-        <Button mode="contained" onPress={addTodo}>
+        <Button style={styles.Button}mode="contained" onPress={addTodo}>
           Add
         </Button>
 
@@ -198,6 +198,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+  Button:
+  {
+    backgroundColor: "blue"
+  }
 });
 
 export default App;
