@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Card, Button, FAB, Provider } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import tinycolor from 'tinycolor2';
 
-function TodoApp() {
+function App() {
   const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState('');
 
